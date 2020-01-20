@@ -1,5 +1,5 @@
+from command import CommandPacket
 import re
-import signal
 from signal import Signal
 from typing import List
 
@@ -27,7 +27,7 @@ def signals_from_string(in_str: str) -> List[Signal]:
 COMMENT_PATTERN = re.compile(r'^[^/]*//[^/]*$')
 
 
-def decode_file(file_path: str) -> str:
+def decode_file(file_path: str) -> CommandPacket:
     signals: List[Signal] = []
     with open(file_path) as f:
         for line in f:
@@ -35,16 +35,5 @@ def decode_file(file_path: str) -> str:
                 if line.strip() == '':
                     continue
                 signals += signals_from_string(line)
-        signal_pairs = zip(signals[::2], signals[1::2])
-        binary_representation = ''
-        for pair in signal_pairs:
-            if pair[0] == Signal.SEPARATE:
-                binary_representation += 'S-I-'
-            elif pair[0] == Signal.LOW and pair[1] == Signal.LOW:
-                binary_representation += '0'
-            elif pair[0] == Signal.LOW and pair[1] == Signal.HIGH:
-                binary_representation += '1'
-            else:
-                print(f'Encountered unknown pair: {pair}')
-        return binary_representation
+    return CommandPacket(signals)
 
