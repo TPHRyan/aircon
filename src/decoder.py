@@ -1,4 +1,4 @@
-from command import CommandPacket
+from command import ModeCommandPacket
 import re
 from signal import Signal
 from typing import List
@@ -27,7 +27,7 @@ def signals_from_string(in_str: str) -> List[Signal]:
 COMMENT_PATTERN = re.compile(r'^[^/]*//[^/]*$')
 
 
-def decode_file(file_path: str) -> CommandPacket:
+def decode_file(file_path: str) -> ModeCommandPacket:
     signals: List[Signal] = []
     with open(file_path) as f:
         for line in f:
@@ -35,5 +35,5 @@ def decode_file(file_path: str) -> CommandPacket:
                 if line.strip() == '':
                     continue
                 signals += signals_from_string(line)
-    return CommandPacket(signals)
+    return ModeCommandPacket(signals)
 

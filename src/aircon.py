@@ -3,7 +3,7 @@ import os
 
 
 def main():
-    for file_name in os.listdir('codes'):
+    for file_name in sorted(os.listdir('codes')):
         print('File:', file_name)
         command_packet = decoder.decode_file(os.path.join('codes', file_name))
         print('Encoded:', command_packet)
