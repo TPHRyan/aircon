@@ -3,7 +3,7 @@ from checksum import checksum
 from command.packet.component import Speed, Temperature
 from command.binary import BinarySerializable
 from signal import Signal
-from typing import Any, Callable, List, Optional, Union
+from typing import Any, Callable, Generator, List, Optional, Union
 
 
 class CommandPacket(BinarySerializable, ABC):
@@ -40,6 +40,17 @@ class CommandPacket(BinarySerializable, ABC):
     @property
     def binary(self) -> str:
         return f'{self.get_binary_encoding()}{self.checksum:0>4b}'
+
+    @property
+    def ir_signals(self) -> Generator[Signal, None, None]:
+        binary = self.binary
+        yield Signal.SEPARATE
+        yield Signal.INTRO
+        for bit in binary:
+            yield Signal.LOW
+            yield Signal.HIGH if bit == '1' else Signal.LOW
+        # Ensure we finish with a LOW signal(?)
+        yield Signal.LOW
 
     @property
     def checksum(self) -> int:
