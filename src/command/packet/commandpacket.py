@@ -14,7 +14,7 @@ class CommandPacket(BinarySerializable, ABC):
         binary_representation = self.binary_from_signals(from_data)[4:]
         provided_checksum = self.to_int(binary_representation[-4:])
 
-        self.parse_binary(binary_representation)
+        self.parse_binary(binary_representation[:-4])
         if self.checksum != provided_checksum:
             self.log('WARNING: Command checksum does not match data!')
             self.log(f'Expected: {provided_checksum}, Actual: {self.checksum}')
@@ -58,9 +58,55 @@ class CommandPacket(BinarySerializable, ABC):
         self.parse_log += message + '\n'
 
 
+class RawCommandPacket(CommandPacket):
+    def __init__(self, *args, **kwargs):
+        self._data: str = ''
+        self.length: int = 0
+        super().__init__(*args, **kwargs)
+
+    def __len__(self):
+        return self.length
+
+    def __getitem__(self, item) -> str:
+        if not isinstance(int, item):
+            raise ValueError(
+                'Index provided should be the place value of the bit you want to get!'
+            )
+        return self._data[-item - 1]
+
+    def __setitem__(self, key, value):
+        msb = self.length - 1
+        if not isinstance(int, key):
+            raise ValueError(
+                'Index provided should be the place value of the bit you want to set!'
+            )
+        if key > msb:
+            raise ValueError(f'Cannot set bit {key}, MSB is {msb}!')
+        self._data = self._data[:-key - 1] + str(value) + self._data[-key:]
+
+    @property
+    def data(self):
+        return self._data
+
+    @data.setter
+    def data(self, data: str):
+        if len(data) > self.length:
+            raise ValueError(
+                'Cannot mutate packet value to a size greater than original value!'
+            )
+        self._data = f'{data:0>{self.length}b}'
+
+    def parse_binary(self, binary_representation: str):
+        self._data = binary_representation
+        self.length = len(binary_representation)
+
+    def get_binary_encoding(self) -> str:
+        return self.data
+
+
 class ModeCommandPacket(CommandPacket):
     def __init__(self, *args, **kwargs):
-        self.unknown_data = ''
+        self.unknown_data: str = ''
         self.speed = None
         self.temperature = None
         super().__init__(*args, **kwargs)
