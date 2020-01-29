@@ -1,18 +1,18 @@
 from abc import abstractmethod, ABC
 from checksum import checksum
 from command.packet.component import Speed, Temperature
-from command.tocode import ToCode
+from command.binary import BinarySerializable
 from signal import Signal
 from typing import Any, Callable, List, Optional, Union
 
 
-class CommandPacket(ToCode, ABC):
+class CommandPacket(BinarySerializable, ABC):
     def __init__(self, from_data: Optional[Union[List[Signal]]] = None):
         super().__init__()
         self.parse_log = ''
 
         binary_representation = self.binary_from_signals(from_data)[4:]
-        provided_checksum = self.convert_to_int(binary_representation[-4:])
+        provided_checksum = self.to_int(binary_representation[-4:])
 
         self.parse_binary(binary_representation)
         if self.checksum != provided_checksum:
@@ -72,7 +72,3 @@ class ModeCommandPacket(CommandPacket):
 
     def get_binary_encoding(self) -> str:
         return f'{self.unknown_data}{self.temperature.binary}{self.speed.binary}'
-
-    @property
-    def value(self) -> int:
-        return 0

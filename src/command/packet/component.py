@@ -1,10 +1,10 @@
 import enum
 from abc import ABC
-from command.tocode import ToCode
+from command.binary import BinarySerializable
 from typing import Union
 
 
-class PacketComponent(ToCode, ABC):
+class PacketComponent(BinarySerializable, ABC):
     pass
 
 
@@ -12,13 +12,13 @@ class Speed(PacketComponent):
     def __init__(self, value: Union[int, str]):
         self.speed: SpeedValue
         try:
-            self.speed = SpeedValue(self.convert_to_int(value))
+            self.speed = SpeedValue(self.to_int(value))
         except ValueError:
             self.speed = SpeedValue(0)
 
     @property
-    def value(self) -> int:
-        return self.speed.value
+    def binary(self) -> str:
+        return self.to_binary(self.speed.value, pad_length=4)
 
 
 class SpeedValue(enum.Enum):
@@ -49,7 +49,7 @@ class Temperature(PacketComponent):
     def __init__(self, temperature: Union[int, str] = 24):
         self._temperature: int = 0
         if isinstance(temperature, str):
-            self.value = temperature
+            self.temperature = self.to_int(temperature) + 15
         else:
             self.temperature = temperature
 
@@ -59,7 +59,7 @@ class Temperature(PacketComponent):
 
     @temperature.setter
     def temperature(self, temperature: Union[int, str]) -> None:
-        temperature = self.convert_to_int(temperature)
+        temperature = self.to_int(temperature)
         min_t = self.MIN_TEMPERATURE
         max_t = self.MAX_TEMPERATURE
         if temperature < min_t:
@@ -71,10 +71,5 @@ class Temperature(PacketComponent):
         self._temperature = temperature
 
     @property
-    def value(self) -> int:
-        return self.temperature - 15
-
-    @value.setter
-    def value(self, temp_val: Union[int, str]):
-        temp_val = self.convert_to_int(temp_val)
-        self.temperature = temp_val + 15
+    def binary(self) -> str:
+        return self.to_binary(self.temperature - 15, 4)
