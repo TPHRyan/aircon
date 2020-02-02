@@ -1,5 +1,6 @@
 import broadlink
 import decoder
+import ir.decoder
 import os
 import time
 
@@ -38,14 +39,16 @@ def run_command(command_name):
     if tries >= 3:
         raise RuntimeError('Could not find device!')
     print('Sending data...')
-    generated_packet = decoder.encode_packet(command_packet.ir_signals)
+    generated_packet = ir.decoder.ir_to_broadlink_full_packet(
+        signals_in=command_packet.encode_ir
+    )
     device.send_data(generated_packet)
 
 
 def main():
     run_command('on')
-    time.sleep(1)
-    run_command('cool_24')
+    # time.sleep(1)
+    # run_command('cool_24')
 
 
 if __name__ == '__main__':

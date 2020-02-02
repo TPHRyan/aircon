@@ -1,5 +1,5 @@
 import enum
-from typing import Type, TypeVar
+from typing import TypeVar, Type
 
 T = TypeVar('T', bound='Signal')
 
