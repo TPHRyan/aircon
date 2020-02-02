@@ -47,8 +47,8 @@ def run_command(command_name):
 
 def main():
     run_command('on')
-    # time.sleep(1)
-    # run_command('cool_24')
+    time.sleep(1)
+    run_command('cool_25')
 
 
 if __name__ == '__main__':

@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Generator, Iterable, Iterator, List
+from typing import Generator, Iterable, Iterator, List, Type, TypeVar
 
 import binary
 import lg.checksum
@@ -12,9 +12,37 @@ class LGPacketError(ValueError):
         super().__init__('Invalid LG packet: ' + message, *args)
 
 
+T = TypeVar('T', bound='LGCommandPacket')
+
+
 class LGCommandPacket(BasePacket, ABC):
     def __str__(self) -> str:
         return f'{binary.bytes_to_int(self.binary):0>28b}'
+
+    @classmethod
+    def create(cls: Type[T], signals_in: Iterable[Signal]) -> T:
+        from lg.packet import ParsedCommandPacket, RawCommandPacket
+        import lg.packet
+        signals_in = list(signals_in)
+        packet_errors = []
+        for packet_obj_name in dir(lg.packet):
+            packet_obj = getattr(lg.packet, packet_obj_name)
+            if not isinstance(packet_obj, type):
+                continue
+            if not issubclass(packet_obj, ParsedCommandPacket):
+                continue
+            try:
+                return packet_obj(signals_in)
+            except LGPacketError as e:
+                packet_errors.append(e)
+                continue
+            except TypeError:
+                continue
+        print('Failed to find suitable candidate for data, errors:')
+        for error in packet_errors:
+            print(error)
+        print('Falling back to raw packet...')
+        return RawCommandPacket(signals_in)
 
     def decode_ir(self, signals: Iterable[Signal]) -> Iterable[int]:
         signals: List[Signal] = list(signals)
@@ -74,7 +102,7 @@ class LGCommandPacket(BasePacket, ABC):
 
 class ParsedCommandPacket(LGCommandPacket, ABC):
     def get_binary_encoding(self) -> bytes:
-        return bytes([0x80, 0x80])
+        return bytes([0x88])
 
     def parse_bytes(self, byte_iter: Iterable[int]):
         self.consume_bytes(iter(byte_iter))

@@ -8,8 +8,8 @@ from packet import PacketComponent
 class ModeCommandPacket(ParsedCommandPacket):
     def __init__(self, *args, **kwargs):
         self.mode: ModeValue = ModeValue.ON
-        self.speed: SpeedValue = SpeedValue.LOW
         self.temperature: Temperature = Temperature()
+        self.speed: SpeedValue = SpeedValue.LOW
         super().__init__(*args, **kwargs)
 
     def consume_bytes(self, byte_iter: Iterator[int]):
@@ -23,16 +23,15 @@ class ModeCommandPacket(ParsedCommandPacket):
             raise LGPacketError('Command byte should be 0x0X!')
         try:
             self.mode = ModeValue(command_byte & 0x0f)
-            self.speed = SpeedValue(payload_byte & 0xf0)
-            self.temperature = Temperature(payload_byte & 0x0f)
+            self.temperature = Temperature((payload_byte & 0xf0) >> 4)
+            self.speed = SpeedValue(payload_byte & 0x0f)
         except ValueError as e:
             raise LGPacketError(str(e))
 
     def get_binary_encoding(self) -> bytes:
         encoding = bytearray(super().get_binary_encoding())
         encoding.append(self.mode.value)
-        encoding.append(self.speed.value)
-        encoding.extend(self.temperature.binary)
+        encoding.append((self.temperature.temperature[0] << 4) + self.speed.value)
         return encoding
 
 
