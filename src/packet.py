@@ -10,7 +10,7 @@ DecoderFunction = Callable[[Iterable[Signal]], bytes]
 class BasePacket(BinarySerializable, ABC):
     def __init__(
             self,
-            from_data: Optional[Iterable[Signal]],
+            from_data: Optional[Iterable[Signal]] = None,
             *args,
             **kwargs
     ):
