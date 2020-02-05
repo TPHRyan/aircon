@@ -5,7 +5,7 @@ import broadlink
 
 import decoder
 import ir.decoder
-from lg.packet import LGCommandPacket
+from lg.packet import LGCommandPacket, OffCommandPacket
 from lg.packet.mode import ModeCommandPacket, ModeValue, SpeedValue
 
 ALLOWED_MODES = {
@@ -75,6 +75,8 @@ def custom_command():
         command.mode = mode_value
         command.speed = speed_value
         command.temperature = temp_value
+    elif command_in == 'off':
+        command = OffCommandPacket()
     else:
         raise ValueError('Could not find specified command!')
     device = acquire_device()
