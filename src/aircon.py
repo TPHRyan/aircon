@@ -1,12 +1,11 @@
 import os
-import time
-
-import broadlink
 
 import decoder
 import ir.decoder
 from lg.packet import LGCommandPacket, OffCommandPacket
 from lg.packet.mode import ModeCommandPacket, ModeValue, SpeedValue
+
+from device import acquire_device
 
 ALLOWED_MODES = {
     'on': ModeValue.ON,
@@ -22,27 +21,6 @@ ALLOWED_SPEEDS = {
     'med': SpeedValue.MED,
     'high': SpeedValue.HIGH,
 }
-
-
-def acquire_device() -> broadlink.rm2:
-    device: broadlink.rm2 = broadlink.discover()
-    tries = 0
-    while not hasattr(device, 'send_data') and tries < 3:
-        device = broadlink.discover()
-        tries += 1
-    if not hasattr(device, 'send_data'):
-        raise RuntimeError(f'Device {device.type} is not supported!')
-    print('Device found! Authenticating...')
-    auth = device.auth()
-    tries = 0
-    while auth is None and tries < 3:
-        print('Device not authenticated, retrying...')
-        time.sleep(1)
-        device.auth()
-        tries += 1
-    if tries >= 3:
-        raise RuntimeError('Could not find device!')
-    return device
 
 
 def custom_command():
